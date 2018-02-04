@@ -57,11 +57,22 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
 
     private MOEAIndividual generateOffspring() {
         final List<IIndividual> mutationCandidates = population.getRandomSolutions(2 * variation.getArity());
+        if (mutationCandidates.size() < 2 * variation.getArity()) {
+            throw new RuntimeException("Failed to get enough mutation candidates: " + mutationCandidates);
+        }
         final Solution[] parents = new Solution[variation.getArity()];
+        //System.err.println(mutationCandidates);
         for (int i = 0; i < mutationCandidates.size() - 1; i += 2) {
+            final MOEAIndividual solution1 = (MOEAIndividual) mutationCandidates.get(i);
+            solution1.setAttribute("crowdingDistance", 0.0);
+            final MOEAIndividual solution2 = (MOEAIndividual) mutationCandidates.get(i + 1);
+            solution2.setAttribute("crowdingDistance", 0.0);
+
+            //TODO: return CD from getRandom of Pop
+
             parents[i / 2] = TournamentSelection.binaryTournament(
-                    (MOEAIndividual) mutationCandidates.get(i),
-                    (MOEAIndividual) mutationCandidates.get(i + 1),
+                    solution1,
+                    solution2,
                     comparator);
         }
 
