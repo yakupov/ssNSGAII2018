@@ -20,21 +20,18 @@ import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static org.moeaframework.core.Settings.KEY_FAST_NONDOMINATED_SORTING;
+
 @Ignore
-public class ManualSSNSGAIITest {
+public class ManualSSNSGAIITest2 {
     private DTLZ getProblem() {
         return new DTLZ1(getDim());
     }
 
     private int getDim() {
-        return 6;
-    }
-
-    private int getTestDurationInSeconds() {
-        return 1200;
+        return 5;
     }
 
     private int getPopSize() {
@@ -46,12 +43,20 @@ public class ManualSSNSGAIITest {
     }
 
     private int getRunCount() {
-        return 1;
+        return 2;
+    }
+
+    private int getNumberOfEvaluations() {
+        return 300000;
+    }
+
+    private int getNumberOfIncrementalInsertions(final int nThreads) {
+        return getPopSize() * getNumberOfEvaluations() / (nThreads * 1500);
     }
 
     private final Hypervolume hypervolume;
 
-    public ManualSSNSGAIITest() {
+    public ManualSSNSGAIITest2() {
         final NondominatedPopulation trueParetoNP = new NondominatedPopulation();
         final DTLZ problem = getProblem();
         double stupidSum = 0;
@@ -61,28 +66,30 @@ public class ManualSSNSGAIITest {
             stupidSum += Arrays.stream(solution.getObjectives()).sum();
         }
 
-        System.out.println("Perfect SS: " + stupidSum/getTrueParetoFrontSize());
+        //System.out.println("Perfect SS: " + stupidSum/getTrueParetoFrontSize());
 
         hypervolume = new Hypervolume(problem, trueParetoNP);
+
+        System.setProperty(KEY_FAST_NONDOMINATED_SORTING, String.valueOf(true));
     }
 
-    private void printHV(IManagedPopulation pop, int stackDepth, int runId) {
+    private void printHV(IManagedPopulation pop, int stackDepth, int runId, long runTime) {
         final NondominatedPopulation np = new NondominatedPopulation();
         for (IIndividual iIndividual : pop.getLevels().get(0).getMembers()) {
             np.add((Solution) iIndividual);
         }
-        printHV(np, stackDepth + 1, runId);
+        printHV(np, stackDepth + 1, runId, runTime);
     }
 
-    private void printHV(final NondominatedPopulation np, int stackDepth, int runId) {
+    private void printHV(final NondominatedPopulation np, int stackDepth, int runId, long runTime) {
         final DTLZ problem = getProblem();
         final String testMethod = getMethodName(stackDepth + 1);
         double stupidSum = 0;
         for (Solution solution : np) {
             stupidSum += Arrays.stream(solution.getObjectives()).sum();
         }
-        System.out.printf("%d\t%s\t%s\t%d\t%d\t%d\t%f\t%f\t%d\n", runId, testMethod, problem.getName(), getDim(),
-                getPopSize(), getTestDurationInSeconds(), hypervolume.evaluate(np), stupidSum/np.size(), np.size());
+        System.out.printf("%d\t%s\t%s\t%d\t%d\t%f\t%f\t%f\t%d\n", runId, testMethod, problem.getName(), getDim(),
+                getPopSize(), (double) runTime / 1e9, hypervolume.evaluate(np), stupidSum/np.size(), np.size()); //print milliseconds
         System.out.flush();
     }
 
@@ -91,11 +98,10 @@ public class ManualSSNSGAIITest {
         return ste[stackDepth + 2].getMethodName();
     }
 
-    @Test
+   //@Test
     public void jfbySerial() {
-        System.out.println("Starting " + getMethodName(0));
+        //System.out.println("Starting " + getMethodName(0));
 
-        final int testDurationInSeconds = getTestDurationInSeconds();
         final int popSize = getPopSize();
         final DTLZ problem = getProblem();
 
@@ -105,19 +111,16 @@ public class ManualSSNSGAIITest {
             nsga.step();
 
             final long startTs = System.nanoTime();
-            while (TimeUnit.SECONDS.toNanos(testDurationInSeconds) > (System.nanoTime() - startTs)) {
-                for (int j = 0; j < 100; ++j) {
-                    nsga.step();
-                }
+            for (int j = 0; j < getNumberOfIncrementalInsertions(1); ++j) {
+                nsga.step();
             }
-            printHV(pop, 0, i);
+            printHV(pop, 0, i, System.nanoTime() - startTs);
         }
     }
 
     private void concurrentTestCommon(final int threadsCount, @Nonnull final Supplier<IManagedPopulation> popSupplier) throws InterruptedException {
-        System.out.println("Starting " + getMethodName(1));
+        //System.out.println("Starting " + getMethodName(1));
 
-        final int testDurationInSeconds = getTestDurationInSeconds();
         final int popSize = getPopSize();
         final DTLZ problem = getProblem();
 
@@ -134,10 +137,8 @@ public class ManualSSNSGAIITest {
                 for (int t = 0; t < threadsCount; ++t) {
                     es.submit(() -> {
                         try {
-                            while (TimeUnit.SECONDS.toNanos(testDurationInSeconds) > (System.nanoTime() - startTs)) {
-                                for (int j = 0; j < 100; ++j) {
-                                    nsga.step();
-                                }
+                            for (int j = 0; j < getNumberOfIncrementalInsertions(threadsCount); ++j) {
+                                nsga.step();
                             }
                         } catch (Throwable th) {
                             th.printStackTrace();
@@ -151,7 +152,7 @@ public class ManualSSNSGAIITest {
                 }
                 latch.await();
 
-                printHV(pop, 1, i);
+                printHV(pop, 1, i, System.nanoTime() - startTs);
             }
         } finally {
             es.shutdownNow();
@@ -163,53 +164,54 @@ public class ManualSSNSGAIITest {
         concurrentTestCommon(3, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-    @Test
-    public void cjfbyAltT3() throws InterruptedException {
-        concurrentTestCommon(3, () -> new CJFBYPopulation(getPopSize(), true));
-    }
-
-    @Test
-    public void tsT3() throws InterruptedException {
-        concurrentTestCommon(3, () -> new TotalSyncJFBYPopulation(getPopSize()));
-    }
+//    @Test
+//    public void cjfbyAltT3() throws InterruptedException {
+//        concurrentTestCommon(3, () -> new CJFBYPopulation(getPopSize(), true));
+//    }
+//
+//    @Test
+//    public void tsT3() throws InterruptedException {
+//        concurrentTestCommon(3, () -> new TotalSyncJFBYPopulation(getPopSize()));
+//    }
 
     @Test
     public void levelLockJfbyT6() throws InterruptedException {
         concurrentTestCommon(6, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-    @Test
-    public void cjfbyAltT6() throws InterruptedException {
-        concurrentTestCommon(6, () -> new CJFBYPopulation(getPopSize(), true));
-    }
-
-    @Test
-    public void tsT6() throws InterruptedException {
-        concurrentTestCommon(6, () -> new TotalSyncJFBYPopulation(getPopSize()));
-    }
-
+//    @Test
+//    public void cjfbyAltT6() throws InterruptedException {
+//        concurrentTestCommon(6, () -> new CJFBYPopulation(getPopSize(), true));
+//    }
+//
+//    @Test
+//    public void tsT6() throws InterruptedException {
+//        concurrentTestCommon(6, () -> new TotalSyncJFBYPopulation(getPopSize()));
+//    }
+//
 
     @Test
     public void levelLockJfbyT12() throws InterruptedException {
         concurrentTestCommon(12, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-    @Test
-    public void cjfbyAltT12() throws InterruptedException {
-        concurrentTestCommon(12, () -> new CJFBYPopulation(getPopSize(), true));
-    }
+//    @Test
+//    public void cjfbyAltT12() throws InterruptedException {
+//        concurrentTestCommon(12, () -> new CJFBYPopulation(getPopSize(), true));
+//    }
 
 
     @Test
     public void testNSGAII() {
         for (int i = 0; i < getRunCount(); ++i) {
+            final long startTs = System.nanoTime();
             final NondominatedPopulation result = new Executor()
                     .withProblem(getProblem())
                     .withAlgorithm("NSGAII")
                     .withProperty("populationSize", getPopSize())
-                    .withMaxTime(getTestDurationInSeconds() * 1000)
+                    .withMaxEvaluations(getNumberOfEvaluations())
                     .run();
-            printHV(result, 0, i);
+            printHV(result, 0, i, System.nanoTime() - startTs);
         }
     }
 }
