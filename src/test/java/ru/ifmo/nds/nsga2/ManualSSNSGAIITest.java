@@ -16,6 +16,7 @@ import ru.ifmo.nds.dcns.jfby.JFBYPopulation;
 import ru.ifmo.nds.dcns.jfby.TotalSyncJFBYPopulation;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,11 +30,11 @@ public class ManualSSNSGAIITest {
     }
 
     private int getDim() {
-        return 3;
+        return 10;
     }
 
     private int getTestDurationInSeconds() {
-        return 10;
+        return 30;
     }
 
     private int getPopSize() {
@@ -41,7 +42,7 @@ public class ManualSSNSGAIITest {
     }
 
     private int getTrueParetoFrontSize() {
-        return 10000;
+        return 100;
     }
 
     private int getRunCount() {
@@ -53,10 +54,14 @@ public class ManualSSNSGAIITest {
     public ManualSSNSGAIITest() {
         final NondominatedPopulation trueParetoNP = new NondominatedPopulation();
         final DTLZ problem = getProblem();
+        double stupidSum = 0;
         for (int i = 0; i < getTrueParetoFrontSize(); ++i) {
             final Solution solution = problem.generate();
             trueParetoNP.add(solution);
+            stupidSum += Arrays.stream(solution.getObjectives()).sum();
         }
+
+        System.out.println("Perfect SS: " + stupidSum/getTrueParetoFrontSize());
 
         hypervolume = new Hypervolume(problem, trueParetoNP);
     }
@@ -72,8 +77,12 @@ public class ManualSSNSGAIITest {
     private void printHV(final NondominatedPopulation np, int stackDepth, int runId) {
         final DTLZ problem = getProblem();
         final String testMethod = getMethodName(stackDepth + 1);
-        System.out.printf("%d\t%s\t%s\t%d\t%d\t%d\t%f\n", runId, testMethod, problem.getName(), getDim(),
-                getPopSize(), getTestDurationInSeconds(), hypervolume.evaluate(np));
+        double stupidSum = 0;
+        for (Solution solution : np) {
+            stupidSum += Arrays.stream(solution.getObjectives()).sum();
+        }
+        System.out.printf("%d\t%s\t%s\t%d\t%d\t%d\t%f\t%f\t%d\n", runId, testMethod, problem.getName(), getDim(),
+                getPopSize(), getTestDurationInSeconds(), hypervolume.evaluate(np), stupidSum/np.size(), np.size());
         System.out.flush();
     }
 
