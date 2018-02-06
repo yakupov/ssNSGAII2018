@@ -1,7 +1,5 @@
 package ru.ifmo.nds.nsga2;
 
-import org.junit.Ignore;
-import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Solution;
@@ -22,8 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-@Ignore
-public class ManualSSNSGAIITest {
+public class TestMain {
     private DTLZ getProblem() {
         return new DTLZ1(getDim());
     }
@@ -33,11 +30,11 @@ public class ManualSSNSGAIITest {
     }
 
     private int getTestDurationInSeconds() {
-        return 10;
+        return 600;
     }
 
     private int getPopSize() {
-        return 500;
+        return 1000;
     }
 
     private int getTrueParetoFrontSize() {
@@ -45,12 +42,12 @@ public class ManualSSNSGAIITest {
     }
 
     private int getRunCount() {
-        return 1;
+        return 5;
     }
 
     private final Hypervolume hypervolume;
 
-    public ManualSSNSGAIITest() {
+    public TestMain() {
         final NondominatedPopulation trueParetoNP = new NondominatedPopulation();
         final DTLZ problem = getProblem();
         for (int i = 0; i < getTrueParetoFrontSize(); ++i) {
@@ -82,7 +79,6 @@ public class ManualSSNSGAIITest {
         return ste[stackDepth + 2].getMethodName();
     }
 
-    @Test
     public void jfbySerial() {
         System.out.println("Starting " + getMethodName(0));
 
@@ -149,49 +145,39 @@ public class ManualSSNSGAIITest {
         }
     }
 
-    @Test
     public void levelLockJfbyT3() throws InterruptedException {
         concurrentTestCommon(3, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-    @Test
     public void cjfbyAltT3() throws InterruptedException {
         concurrentTestCommon(3, () -> new CJFBYPopulation(getPopSize(), true));
     }
 
-    @Test
     public void tsT3() throws InterruptedException {
         concurrentTestCommon(3, () -> new TotalSyncJFBYPopulation(getPopSize()));
     }
 
-    @Test
     public void levelLockJfbyT6() throws InterruptedException {
         concurrentTestCommon(6, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-    @Test
     public void cjfbyAltT6() throws InterruptedException {
         concurrentTestCommon(6, () -> new CJFBYPopulation(getPopSize(), true));
     }
 
-    @Test
     public void tsT6() throws InterruptedException {
         concurrentTestCommon(6, () -> new TotalSyncJFBYPopulation(getPopSize()));
     }
 
-
-    @Test
     public void levelLockJfbyT12() throws InterruptedException {
         concurrentTestCommon(12, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-    @Test
     public void cjfbyAltT12() throws InterruptedException {
         concurrentTestCommon(12, () -> new CJFBYPopulation(getPopSize(), true));
     }
 
 
-    @Test
     public void testNSGAII() {
         for (int i = 0; i < getRunCount(); ++i) {
             final NondominatedPopulation result = new Executor()
@@ -202,5 +188,19 @@ public class ManualSSNSGAIITest {
                     .run();
             printHV(result, 0, i);
         }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        final TestMain tm = new TestMain();
+        tm.cjfbyAltT3();
+        tm.cjfbyAltT6();
+        tm.cjfbyAltT12();
+        tm.jfbySerial();
+        tm.levelLockJfbyT3();
+        tm.levelLockJfbyT6();
+        tm.levelLockJfbyT12();
+        tm.tsT3();
+        tm.tsT6();
+        tm.testNSGAII();
     }
 }
