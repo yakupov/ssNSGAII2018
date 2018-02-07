@@ -43,7 +43,7 @@ public class ManualSSNSGAIITest2 {
     }
 
     private int getRunCount() {
-        return 2;
+        return 3;
     }
 
     private int getNumberOfEvaluations() {

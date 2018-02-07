@@ -2,20 +2,26 @@ package ru.ifmo.nds.nsga2;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.moeaframework.algorithm.AbstractAlgorithm;
-import org.moeaframework.core.*;
+import org.moeaframework.core.EpsilonBoxDominanceArchive;
+import org.moeaframework.core.EpsilonBoxEvolutionaryAlgorithm;
+import org.moeaframework.core.NondominatedPopulation;
+import org.moeaframework.core.NondominatedSortingPopulation;
+import org.moeaframework.core.Problem;
+import org.moeaframework.core.Solution;
+import org.moeaframework.core.Variation;
 import org.moeaframework.core.comparator.ChainedComparator;
 import org.moeaframework.core.comparator.CrowdingComparator;
 import org.moeaframework.core.comparator.DominanceComparator;
 import org.moeaframework.core.comparator.ParetoDominanceComparator;
 import org.moeaframework.core.operator.TournamentSelection;
-import ru.ifmo.nds.IIndividual;
 import ru.ifmo.nds.IManagedPopulation;
-import ru.ifmo.nds.impl.CDIndividual;
+import ru.ifmo.nds.impl.CDIndividualWithRank;
 import ru.ifmo.nds.nsga2.init.MOEAIndInitialization;
 
 import java.util.List;
 
 import static ru.ifmo.nds.nsga2.MoeaSsUtils.convertSolution;
+import static ru.ifmo.nds.nsga2.RankComparator.RANK_ATTR_NAME;
 
 /**
  * Steady-state modification of NSGA2, implemented using incremental NDS.
@@ -37,7 +43,8 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
 
     private final DominanceComparator comparator = new ChainedComparator(
             new ParetoDominanceComparator(),
-            new CrowdingComparator());
+            new CrowdingComparator(),
+            new RankComparator());
 
     public SSNSGAII(Problem problem, Variation variation, MOEAIndInitialization initialization, IManagedPopulation population) {
         super(problem);
@@ -71,20 +78,22 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
     private static final String CD_ATTR_NAME = "crowdingDistance";
 
     private MOEAIndividual generateOffspring() {
-        final List<CDIndividual> mutationCandidates = population.getRandomSolutions(2 * variation.getArity());
+        final List<CDIndividualWithRank> mutationCandidates = population.getRandomSolutions(2 * variation.getArity());
         if (mutationCandidates.size() < 2 * variation.getArity()) {
             throw new RuntimeException("Failed to get enough mutation candidates: " + mutationCandidates);
         }
         final Solution[] parents = new Solution[variation.getArity()];
         //System.err.println(mutationCandidates);
         for (int i = 0; i < mutationCandidates.size() - 1; i += 2) {
-            final CDIndividual ind1 = mutationCandidates.get(i);
+            final CDIndividualWithRank ind1 = mutationCandidates.get(i);
             final MOEAIndividual solution1 = ((MOEAIndividual) ind1.getIndividual()).copy();
             solution1.setAttribute(CD_ATTR_NAME, ind1.getCrowdingDistance());
+            solution1.setAttribute(RANK_ATTR_NAME, ind1.getRank());
 
-            final CDIndividual ind2 = mutationCandidates.get(i + 1);
+            final CDIndividualWithRank ind2 = mutationCandidates.get(i + 1);
             final MOEAIndividual solution2 = ((MOEAIndividual) ind2.getIndividual()).copy();
             solution2.setAttribute(CD_ATTR_NAME, ind2.getCrowdingDistance());
+            solution2.setAttribute(RANK_ATTR_NAME, ind2.getRank());
 
             parents[i / 2] = TournamentSelection.binaryTournament(
                     solution1,
