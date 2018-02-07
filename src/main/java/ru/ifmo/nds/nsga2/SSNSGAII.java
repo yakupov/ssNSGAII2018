@@ -13,10 +13,14 @@ import org.moeaframework.core.comparator.ChainedComparator;
 import org.moeaframework.core.comparator.CrowdingComparator;
 import org.moeaframework.core.comparator.DominanceComparator;
 import org.moeaframework.core.comparator.ParetoDominanceComparator;
+import org.moeaframework.core.operator.CompoundVariation;
 import org.moeaframework.core.operator.TournamentSelection;
 import ru.ifmo.nds.IManagedPopulation;
 import ru.ifmo.nds.impl.CDIndividualWithRank;
 import ru.ifmo.nds.nsga2.init.MOEAIndInitialization;
+import ru.ifmo.nds.nsga2.variation.BitFlip;
+import ru.ifmo.nds.nsga2.variation.PM;
+import ru.ifmo.nds.nsga2.variation.SBX;
 
 import java.util.List;
 
@@ -48,7 +52,9 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
 
     public SSNSGAII(Problem problem, Variation variation, MOEAIndInitialization initialization, IManagedPopulation population) {
         super(problem);
-        this.variation = variation;
+        //this.variation = variation;
+        this.variation = new CompoundVariation(new SBX(1.0, 15.0),
+                new PM(1.0 / problem.getNumberOfVariables(), 20.0));
         this.initialization = initialization;
         this.population = population;
     }
@@ -78,11 +84,13 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
     private static final String CD_ATTR_NAME = "crowdingDistance";
 
     private MOEAIndividual generateOffspring() {
-        final List<CDIndividualWithRank> mutationCandidates = population.getRandomSolutions(2 * variation.getArity());
-        if (mutationCandidates.size() < 2 * variation.getArity()) {
+        final int mutationCandidatesCount = 4 * variation.getArity();
+        final List<CDIndividualWithRank> mutationCandidates = population.getRandomSolutions(mutationCandidatesCount);
+        if (mutationCandidates.size() < mutationCandidatesCount) {
             throw new RuntimeException("Failed to get enough mutation candidates: " + mutationCandidates);
         }
-        final Solution[] parents = new Solution[variation.getArity()];
+
+        Solution[] parents = new Solution[mutationCandidatesCount / 2];
         //System.err.println(mutationCandidates);
         for (int i = 0; i < mutationCandidates.size() - 1; i += 2) {
             final CDIndividualWithRank ind1 = mutationCandidates.get(i);
@@ -99,6 +107,20 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
                     solution1,
                     solution2,
                     comparator);
+        }
+
+        while (parents.length > variation.getArity()) {
+            final Solution[] oldParents = parents;
+            parents = new Solution[oldParents.length / 2];
+            for (int i = 0; i < oldParents.length - 1; i += 2) {
+                final MOEAIndividual solution1 = ((MOEAIndividual) oldParents[i]);
+                final MOEAIndividual solution2 = ((MOEAIndividual) oldParents[i + 1]);
+
+                parents[i / 2] = TournamentSelection.binaryTournament(
+                        solution1,
+                        solution2,
+                        comparator);
+            }
         }
 
         final MOEAIndividual solution = convertSolution(variation.evolve(parents)[0]);
