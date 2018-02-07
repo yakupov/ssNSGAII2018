@@ -1,6 +1,5 @@
 package ru.ifmo.nds.nsga2;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
@@ -24,15 +23,12 @@ import java.util.function.Supplier;
 
 import static org.moeaframework.core.Settings.KEY_FAST_NONDOMINATED_SORTING;
 
-@Ignore
-public class ManualSSNSGAIITest2 {
+public abstract class AbstractManualSSNSGAIIDtlzTest {
     private DTLZ getProblem() {
         return new DTLZ1(getDim());
     }
 
-    private int getDim() {
-        return 3;
-    }
+    abstract int getDim();
 
     private int getPopSize() {
         return 500;
@@ -43,12 +39,10 @@ public class ManualSSNSGAIITest2 {
     }
 
     private int getRunCount() {
-        return 2;
+        return 5;
     }
 
-    private int getNumberOfEvaluations() {
-        return 200000;
-    }
+    abstract int getNumberOfEvaluations();
 
     private int getNumberOfIncrementalInsertions(final int nThreads) {
         return getPopSize() * getNumberOfEvaluations() / (nThreads * 500);
@@ -56,7 +50,7 @@ public class ManualSSNSGAIITest2 {
 
     private final Hypervolume hypervolume;
 
-    public ManualSSNSGAIITest2() {
+    public AbstractManualSSNSGAIIDtlzTest() {
         final NondominatedPopulation trueParetoNP = new NondominatedPopulation();
         final DTLZ problem = getProblem();
         double stupidSum = 0;
@@ -65,8 +59,6 @@ public class ManualSSNSGAIITest2 {
             trueParetoNP.add(solution);
             stupidSum += Arrays.stream(solution.getObjectives()).sum();
         }
-
-        //System.out.println("Perfect SS: " + stupidSum/getTrueParetoFrontSize());
 
         hypervolume = new Hypervolume(problem, trueParetoNP);
 
@@ -98,7 +90,7 @@ public class ManualSSNSGAIITest2 {
         return ste[stackDepth + 2].getMethodName();
     }
 
-   //@Test
+   @Test
     public void jfbySerial() {
         //System.out.println("Starting " + getMethodName(0));
 
@@ -164,42 +156,41 @@ public class ManualSSNSGAIITest2 {
         concurrentTestCommon(3, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-//    @Test
-//    public void cjfbyAltT3() throws InterruptedException {
-//        concurrentTestCommon(3, () -> new CJFBYPopulation(getPopSize(), true));
-//    }
-//
-//    @Test
-//    public void tsT3() throws InterruptedException {
-//        concurrentTestCommon(3, () -> new TotalSyncJFBYPopulation(getPopSize()));
-//    }
+    @Test
+    public void cjfbyAltT3() throws InterruptedException {
+        concurrentTestCommon(3, () -> new CJFBYPopulation(getPopSize(), true));
+    }
+
+    @Test
+    public void tsT3() throws InterruptedException {
+        concurrentTestCommon(3, () -> new TotalSyncJFBYPopulation(getPopSize()));
+    }
 
     @Test
     public void levelLockJfbyT6() throws InterruptedException {
         concurrentTestCommon(6, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-//    @Test
-//    public void cjfbyAltT6() throws InterruptedException {
-//        concurrentTestCommon(6, () -> new CJFBYPopulation(getPopSize(), true));
-//    }
-//
-//    @Test
-//    public void tsT6() throws InterruptedException {
-//        concurrentTestCommon(6, () -> new TotalSyncJFBYPopulation(getPopSize()));
-//    }
-//
+    @Test
+    public void cjfbyAltT6() throws InterruptedException {
+        concurrentTestCommon(6, () -> new CJFBYPopulation(getPopSize(), true));
+    }
+
+    @Test
+    public void tsT6() throws InterruptedException {
+        concurrentTestCommon(6, () -> new TotalSyncJFBYPopulation(getPopSize()));
+    }
+
 
     @Test
     public void levelLockJfbyT12() throws InterruptedException {
         concurrentTestCommon(12, () -> new LevelLockJFBYPopulation(getPopSize()));
     }
 
-//    @Test
-//    public void cjfbyAltT12() throws InterruptedException {
-//        concurrentTestCommon(12, () -> new CJFBYPopulation(getPopSize(), true));
-//    }
-
+    @Test
+    public void cjfbyAltT12() throws InterruptedException {
+        concurrentTestCommon(12, () -> new CJFBYPopulation(getPopSize(), true));
+    }
 
     @Test
     public void testNSGAII() {
