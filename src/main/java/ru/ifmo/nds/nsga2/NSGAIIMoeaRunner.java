@@ -4,14 +4,15 @@ import org.moeaframework.algorithm.NSGAII;
 import org.moeaframework.core.Initialization;
 import org.moeaframework.core.NondominatedSortingPopulation;
 import org.moeaframework.core.Problem;
+import org.moeaframework.core.Solution;
 import org.moeaframework.core.Variation;
 import org.moeaframework.core.comparator.ChainedComparator;
 import org.moeaframework.core.comparator.CrowdingComparator;
 import org.moeaframework.core.comparator.ParetoDominanceComparator;
+import org.moeaframework.core.operator.RandomInitialization;
 import org.moeaframework.core.operator.TournamentSelection;
 import org.moeaframework.core.spi.OperatorFactory;
 import ru.ifmo.nds.IManagedPopulation;
-import ru.ifmo.nds.nsga2.init.MOEAIndInitialization;
 
 import java.util.Properties;
 
@@ -52,11 +53,9 @@ public class NSGAIIMoeaRunner {
         return new NSGAII(problem, population, null, selection, variation, initialization);
     }
 
-    public static SSNSGAII newSSNSGAII(int populationSize, Problem problem, IManagedPopulation population) {
-        final MOEAIndInitialization initialization =
-                new ru.ifmo.nds.nsga2.init.RandomInitialization(problem, populationSize);
+    public static SSNSGAII newSSNSGAII(int populationSize, Problem problem, IManagedPopulation<Solution> population) {
         final Variation variation = getVariation(problem);
-        return new SSNSGAII(problem, variation, initialization, population);
+        return new SSNSGAII(problem, variation, new RandomInitialization(problem, populationSize), population);
     }
 
     private static Variation getVariation(Problem problem) {

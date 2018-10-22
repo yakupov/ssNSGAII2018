@@ -1,6 +1,5 @@
 package ru.ifmo.nds.nsga2;
 
-import org.moeaframework.core.Solution;
 import ru.ifmo.nds.IIndividual;
 import ru.ifmo.nds.IManagedPopulation;
 import ru.ifmo.nds.INonDominationLevel;
@@ -9,25 +8,13 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 public class MoeaSsUtils {
-    public static MOEAIndividual convertSolution(final Solution solution) {
-        if (solution == null) {
-            return null;
-        } else {
-            final MOEAIndividual res = new MOEAIndividual(solution.getNumberOfVariables(), solution.getNumberOfObjectives(), solution.getNumberOfConstraints());
-            for(int j = 0; j < solution.getNumberOfVariables(); ++j) {
-                res.setVariable(j, solution.getVariable(j));
-            }
-//            final String cdAttrName = "crowdingDistance";
-//            res.setAttribute(cdAttrName, (Serializable) solution.getAttribute(cdAttrName));
-            return res;
-        }
-    }
 
-    public static double calculateZeroLevelHv(@Nonnull final IManagedPopulation population) {
-        if (population.getLevels().isEmpty()) {
+
+    public static <T> double calculateZeroLevelHv(@Nonnull final IManagedPopulation<T> population) {
+        if (population.getLevelsUnsafe().isEmpty()) {
             return 0;
         } else {
-            final INonDominationLevel level = population.getLevels().get(0);
+            final INonDominationLevel<T> level = population.getLevelsUnsafe().get(0);
             if (level.getMembers() == null || level.getMembers().isEmpty()) {
                 return 0;
             } else {
