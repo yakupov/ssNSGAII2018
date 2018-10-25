@@ -10,21 +10,19 @@ import org.moeaframework.core.NondominatedSortingPopulation;
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.Variation;
-import org.moeaframework.core.comparator.ChainedComparator;
-import org.moeaframework.core.comparator.CrowdingComparator;
-import org.moeaframework.core.comparator.DominanceComparator;
-import org.moeaframework.core.comparator.ParetoDominanceComparator;
 import org.moeaframework.core.operator.CompoundVariation;
-import org.moeaframework.core.operator.TournamentSelection;
 import ru.ifmo.nds.IManagedPopulation;
 import ru.ifmo.nds.impl.FitnessAndCdIndividual;
 import ru.ifmo.nds.impl.RankedIndividual;
+import ru.ifmo.nds.nsga2.evo.ChainedComparator;
+import ru.ifmo.nds.nsga2.evo.CrowdingComparator;
+import ru.ifmo.nds.nsga2.evo.RankComparator;
+import ru.ifmo.nds.nsga2.evo.Selection;
 import ru.ifmo.nds.nsga2.variation.PM;
 import ru.ifmo.nds.nsga2.variation.SBX;
 
+import java.util.Comparator;
 import java.util.List;
-
-import static ru.ifmo.nds.nsga2.RankComparator.RANK_ATTR_NAME;
 
 /**
  * Steady-state modification of NSGA2, implemented using incremental NDS.
@@ -44,10 +42,10 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
     private final Initialization initialization;
     private final IManagedPopulation<Solution> population;
 
-    private final DominanceComparator comparator = new ChainedComparator(
-            new ParetoDominanceComparator(),
-            new CrowdingComparator(),
-            new RankComparator());
+    private final Comparator<RankedIndividual> comparator = new ChainedComparator<>(
+            new RankComparator(),
+            new CrowdingComparator<>()
+    );
 
     public SSNSGAII(Problem problem, Variation variation, Initialization initialization, IManagedPopulation<Solution> population) {
         super(problem);
@@ -61,7 +59,8 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
     @Override
     public void iterate() {
         try {
-            doIterate();
+            final Solution addend = generateOffspring();
+            population.addIndividual(new FitnessAndCdIndividual<>(addend.getObjectives(), addend));
         } catch (ArrayIndexOutOfBoundsException e) {
             for (StackTraceElement stackTraceElement : e.getStackTrace()) {
                 if (stackTraceElement.getClassName().contains(MersenneTwister.class.getSimpleName())) {
@@ -74,14 +73,6 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
         }
     }
 
-    public Solution doIterate() {
-        final Solution addend = generateOffspring();
-        population.addIndividual(new FitnessAndCdIndividual<Solution>(addend.getObjectives(), addend));
-        return addend;
-    }
-
-    private static final String CD_ATTR_NAME = "crowdingDistance";
-
     private Solution generateOffspring() {
         final int mutationCandidatesCount = 4 * variation.getArity();
         final List<RankedIndividual<Solution>> mutationCandidates = population.getRandomSolutions(mutationCandidatesCount);
@@ -89,40 +80,34 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
             throw new RuntimeException("Failed to get enough mutation candidates: " + mutationCandidates);
         }
 
-        Solution[] parents = new Solution[mutationCandidatesCount / 2];
+        RankedIndividual[] parents = new RankedIndividual[mutationCandidatesCount / 2];
         //System.err.println(mutationCandidates);
         for (int i = 0; i < mutationCandidates.size() - 1; i += 2) {
             final RankedIndividual<Solution> ind1 = mutationCandidates.get(i);
-            final Solution solution1 = ind1.getPayload();
-            solution1.setAttribute(CD_ATTR_NAME, ind1.getCrowdingDistance());
-            solution1.setAttribute(RANK_ATTR_NAME, ind1.getRank());
-
             final RankedIndividual<Solution> ind2 = mutationCandidates.get(i + 1);
-            final Solution solution2 = ind2.getPayload();
-            solution2.setAttribute(CD_ATTR_NAME, ind2.getCrowdingDistance());
-            solution2.setAttribute(RANK_ATTR_NAME, ind2.getRank());
-
-            parents[i / 2] = TournamentSelection.binaryTournament(
-                    solution1,
-                    solution2,
-                    comparator);
+            parents[i / 2] = Selection.binaryTournament(ind1, ind2, comparator);
         }
 
         while (parents.length > variation.getArity()) {
-            final Solution[] oldParents = parents;
-            parents = new Solution[oldParents.length / 2];
+            final RankedIndividual[] oldParents = parents;
+            parents = new RankedIndividual[oldParents.length / 2];
             for (int i = 0; i < oldParents.length - 1; i += 2) {
-                final Solution solution1 = oldParents[i];
-                final Solution solution2 = oldParents[i + 1];
+                final RankedIndividual solution1 = oldParents[i];
+                final RankedIndividual solution2 = oldParents[i + 1];
 
-                parents[i / 2] = TournamentSelection.binaryTournament(
+                parents[i / 2] = Selection.binaryTournament(
                         solution1,
                         solution2,
                         comparator);
             }
         }
 
-        final Solution solution = variation.evolve(parents)[0];
+        final Solution[] parentSolutions = new Solution[variation.getArity()];
+        for (int i = 0; i < variation.getArity(); ++i) {
+            parentSolutions[i] = (Solution) parents[i].getPayload();
+        }
+
+        final Solution solution = variation.evolve(parentSolutions)[0];
         evaluate(solution);
         return solution;
     }
@@ -133,7 +118,7 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
 
         final Solution[] initialSolutions = initialization.initialize();
         evaluateAll(initialSolutions);
-        for (Solution s: initialSolutions) {
+        for (Solution s : initialSolutions) {
             population.addIndividual(new FitnessAndCdIndividual<>(s.getObjectives(), s));
             //System.out.println(Arrays.toString(s.getObjectives()));
         }
