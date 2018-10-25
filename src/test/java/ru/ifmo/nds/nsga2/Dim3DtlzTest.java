@@ -8,6 +8,6 @@ public class Dim3DtlzTest extends AbstractManualSSNSGAIIDtlzTest {
 
     @Override
     int getNumberOfEvaluations() {
-        return 300000;
+        return 200000;
     }
 }

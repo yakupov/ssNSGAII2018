@@ -31,7 +31,7 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
     abstract int getDim();
 
     private int getPopSize() {
-        return 500;
+        return 2000;
     }
 
     private int getTrueParetoFrontSize() {
@@ -45,7 +45,7 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
     abstract int getNumberOfEvaluations();
 
     private int getNumberOfIncrementalInsertions(final int nThreads) {
-        return getPopSize() * getNumberOfEvaluations() / (nThreads * 500);
+        return getPopSize() * getNumberOfEvaluations() / (nThreads * 4000);
     }
 
     private final Hypervolume hypervolume;
