@@ -60,7 +60,8 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.ifmo.nds.nsga2.TestMain</mainClass>
+                            <!--<mainClass>ru.ifmo.nds.nsga2.TestMain</mainClass>-->
+                            <mainClass>Dim5Dtlz1Runner</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

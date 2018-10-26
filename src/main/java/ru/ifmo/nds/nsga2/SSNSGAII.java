@@ -74,32 +74,18 @@ public class SSNSGAII extends AbstractAlgorithm implements EpsilonBoxEvolutionar
     }
 
     private Solution generateOffspring() {
-        final int mutationCandidatesCount = 4 * variation.getArity();
+        final int mutationCandidatesCount = variation.getArity() * 2;
         final List<RankedIndividual<Solution>> mutationCandidates = population.getRandomSolutions(mutationCandidatesCount);
         if (mutationCandidates.size() < mutationCandidatesCount) {
             throw new RuntimeException("Failed to get enough mutation candidates: " + mutationCandidates);
         }
 
-        RankedIndividual[] parents = new RankedIndividual[mutationCandidatesCount / 2];
+        final RankedIndividual[] parents = new RankedIndividual[variation.getArity()];
         //System.err.println(mutationCandidates);
         for (int i = 0; i < mutationCandidates.size() - 1; i += 2) {
             final RankedIndividual<Solution> ind1 = mutationCandidates.get(i);
             final RankedIndividual<Solution> ind2 = mutationCandidates.get(i + 1);
             parents[i / 2] = Selection.binaryTournament(ind1, ind2, comparator);
-        }
-
-        while (parents.length > variation.getArity()) {
-            final RankedIndividual[] oldParents = parents;
-            parents = new RankedIndividual[oldParents.length / 2];
-            for (int i = 0; i < oldParents.length - 1; i += 2) {
-                final RankedIndividual solution1 = oldParents[i];
-                final RankedIndividual solution2 = oldParents[i + 1];
-
-                parents[i / 2] = Selection.binaryTournament(
-                        solution1,
-                        solution2,
-                        comparator);
-            }
         }
 
         final Solution[] parentSolutions = new Solution[variation.getArity()];
