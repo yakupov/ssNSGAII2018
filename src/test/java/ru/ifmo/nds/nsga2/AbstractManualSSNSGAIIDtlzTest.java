@@ -132,7 +132,7 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
                 for (int t = 0; t < threadsCount; ++t) {
                     es.submit(() -> {
                         try {
-                            for (int j = 0; j < getNumberOfIncrementalInsertions(threadsCount); ++j) {
+                            for (long j = 0; j < getNumberOfIncrementalInsertions(threadsCount); ++j) {
                                 nsga.step();
                             }
                         } catch (Throwable th) {
