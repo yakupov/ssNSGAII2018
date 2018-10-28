@@ -44,8 +44,10 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
 
     abstract int getNumberOfEvaluations();
 
-    private int getNumberOfIncrementalInsertions(final int nThreads) {
-        return getPopSize() * getNumberOfEvaluations() / (nThreads * 500);
+    private long getNumberOfIncrementalInsertions(final int nThreads) {
+        long tmp = getNumberOfEvaluations();
+        tmp *= getPopSize();
+        return tmp / (nThreads * 500);
     }
 
     private final Hypervolume hypervolume;
@@ -103,7 +105,7 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
             nsga.step();
 
             final long startTs = System.nanoTime();
-            for (int j = 0; j < getNumberOfIncrementalInsertions(1); ++j) {
+            for (long j = 0; j < getNumberOfIncrementalInsertions(1); ++j) {
                 nsga.step();
             }
             printHV(pop, 0, i, System.nanoTime() - startTs);

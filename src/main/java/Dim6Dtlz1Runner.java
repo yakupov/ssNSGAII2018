@@ -1,7 +1,7 @@
-public class Dim5Dtlz1Runner extends AbstractBenchRunner {
+public class Dim6Dtlz1Runner extends AbstractBenchRunner {
     @Override
     int getDim() {
-        return 5;
+        return 6;
     }
 
     @Override
@@ -11,21 +11,17 @@ public class Dim5Dtlz1Runner extends AbstractBenchRunner {
 
     @Override
     protected int getPopSize() {
-        return 100;
-    }
-
-    @Override
-    protected int getTrueParetoFrontSize() {
-        return 20;
+        return 4000;
     }
 
     @Override
     int getNumberOfEvaluations() {
-        return 5000000;
+        return 1000000;
     }
 
+
     public static void main(String[] args) throws Exception {
-        final Dim5Dtlz1Runner runner = new Dim5Dtlz1Runner();
+        final Dim6Dtlz1Runner runner = new Dim6Dtlz1Runner();
         runner.levelLockJfbyT6();
         runner.testNSGAII();
         runner.jfbySerial();

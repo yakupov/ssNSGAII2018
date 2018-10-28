@@ -8,16 +8,16 @@ public class Dim6DtlzTest extends AbstractManualSSNSGAIIDtlzTest {
 
     @Override
     protected int getRunCount() {
-        return 3;
+        return 1;
     }
 
     @Override
     protected int getPopSize() {
-        return 1000;
+        return 3800;
     }
 
     @Override
     int getNumberOfEvaluations() {
-        return 300000;
+        return 1000000;
     }
 }
