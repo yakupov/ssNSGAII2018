@@ -18,6 +18,6 @@ public class Dim5DtlzTest extends AbstractManualSSNSGAIIDtlzTest {
 
     @Override
     int getNumberOfEvaluations() {
-        return 500000;
+        return 800000;
     }
 }

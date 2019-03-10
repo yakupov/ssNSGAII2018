@@ -8,7 +8,7 @@ public class Dim6DtlzTest extends AbstractManualSSNSGAIIDtlzTest {
 
     @Override
     protected int getRunCount() {
-        return 1;
+        return 3;
     }
 
     @Override
@@ -18,6 +18,6 @@ public class Dim6DtlzTest extends AbstractManualSSNSGAIIDtlzTest {
 
     @Override
     int getNumberOfEvaluations() {
-        return 1000000;
+        return 7600000;
     }
 }

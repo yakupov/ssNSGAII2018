@@ -61,7 +61,7 @@
                     <archive>
                         <manifest>
                             <!--<mainClass>ru.ifmo.nds.nsga2.TestMain</mainClass>-->
-                            <mainClass>Dim6Dtlz1Runner</mainClass>
+                            <mainClass>runner.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

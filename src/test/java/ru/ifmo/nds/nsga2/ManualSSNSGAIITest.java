@@ -14,6 +14,7 @@ import ru.ifmo.nds.dcns.concurrent.CJFBYPopulation;
 import ru.ifmo.nds.dcns.concurrent.LevelLockJFBYPopulation;
 import ru.ifmo.nds.dcns.jfby.JFBYPopulation;
 import ru.ifmo.nds.dcns.jfby.TotalSyncJFBYPopulation;
+import runner.Main;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -212,5 +213,10 @@ public class ManualSSNSGAIITest {
                     .run();
             printHV(result, 0, i);
         }
+    }
+
+    @Test
+    public void runMain() throws Exception {
+        Main.main(null);
     }
 }

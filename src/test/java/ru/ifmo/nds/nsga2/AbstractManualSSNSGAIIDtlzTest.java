@@ -11,8 +11,10 @@ import ru.ifmo.nds.IIndividual;
 import ru.ifmo.nds.IManagedPopulation;
 import ru.ifmo.nds.dcns.concurrent.CJFBYPopulation;
 import ru.ifmo.nds.dcns.concurrent.LevelLockJFBYPopulation;
+import ru.ifmo.nds.dcns.enlu.ENLUManagedPopulation;
 import ru.ifmo.nds.dcns.jfby.JFBYPopulation;
 import ru.ifmo.nds.dcns.jfby.TotalSyncJFBYPopulation;
+import runner.RetardedDTLZ1;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -25,7 +27,7 @@ import static org.moeaframework.core.Settings.KEY_FAST_NONDOMINATED_SORTING;
 
 public abstract class AbstractManualSSNSGAIIDtlzTest {
     private DTLZ getProblem() {
-        return new DTLZ1(getDim());
+        return new RetardedDTLZ1(getDim());
     }
 
     abstract int getDim();
@@ -44,10 +46,9 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
 
     abstract int getNumberOfEvaluations();
 
-    private long getNumberOfIncrementalInsertions(final int nThreads) {
+    protected long getNumberOfIncrementalInsertions(final long nThreads) {
         long tmp = getNumberOfEvaluations();
-        tmp *= getPopSize();
-        return tmp / (nThreads * 500);
+        return tmp / nThreads;
     }
 
     private final Hypervolume hypervolume;
@@ -155,6 +156,11 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
     }
 
     @Test
+    public void enluT3() throws InterruptedException {
+        concurrentTestCommon(3, () -> new ENLUManagedPopulation<>(getPopSize()));
+    }
+
+    @Test
     public void levelLockJfbyT3() throws InterruptedException {
         concurrentTestCommon(3, () -> new LevelLockJFBYPopulation<>(getPopSize()));
     }
@@ -183,7 +189,6 @@ public abstract class AbstractManualSSNSGAIIDtlzTest {
     public void tsT6() throws InterruptedException {
         concurrentTestCommon(6, () -> new TotalSyncJFBYPopulation<>(getPopSize()));
     }
-
 
     @Test
     public void levelLockJfbyT12() throws InterruptedException {

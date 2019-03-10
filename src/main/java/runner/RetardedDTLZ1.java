@@ -1,4 +1,4 @@
-package ru.ifmo.nds.nsga2;
+package runner;
 
 import org.moeaframework.core.Solution;
 import org.moeaframework.problem.DTLZ.DTLZ1;
@@ -15,7 +15,7 @@ public class RetardedDTLZ1 extends DTLZ1 {
     @Override
     public void evaluate(Solution solution) {
         try {
-            Thread.sleep(0, 20);
+            Thread.sleep(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return;
