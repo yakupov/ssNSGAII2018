@@ -15,7 +15,7 @@ public class RetardedDTLZ1 extends DTLZ1 {
     @Override
     public void evaluate(Solution solution) {
         try {
-            Thread.sleep(1);
+            Thread.sleep(5);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return;
