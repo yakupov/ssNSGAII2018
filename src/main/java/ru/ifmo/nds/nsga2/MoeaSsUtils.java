@@ -9,8 +9,7 @@ import java.util.Arrays;
 
 public class MoeaSsUtils {
 
-
-    public static <T> double calculateZeroLevelHv(@Nonnull final IManagedPopulation<T> population) {
+   public static <T> double calculateZeroLevelHv(@Nonnull final IManagedPopulation<T> population) {
         if (population.getLevelsUnsafe().isEmpty()) {
             return 0;
         } else {

@@ -3,12 +3,12 @@ package runner;
 import org.moeaframework.core.Solution;
 import org.moeaframework.problem.DTLZ.DTLZ1;
 
-public class RetardedDTLZ1 extends DTLZ1 {
-    public RetardedDTLZ1(int numberOfObjectives) {
+public class DTLZ1Plus5Ms extends DTLZ1 {
+    public DTLZ1Plus5Ms(int numberOfObjectives) {
         super(numberOfObjectives);
     }
 
-    public RetardedDTLZ1(int numberOfVariables, int numberOfObjectives) {
+    public DTLZ1Plus5Ms(int numberOfVariables, int numberOfObjectives) {
         super(numberOfVariables, numberOfObjectives);
     }
 

@@ -60,8 +60,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <!--<mainClass>ru.ifmo.nds.nsga2.TestMain</mainClass>-->
-                            <mainClass>runner.Main</mainClass>
+                            <mainClass>runner.FixedThreadCountConfigurationsMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

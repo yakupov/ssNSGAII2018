@@ -4,10 +4,10 @@ import org.moeaframework.problem.DTLZ.DTLZ;
 
 public class ConcurrentConfigurationSearcher {
     public static void main(String[] args) throws Exception {
-        final AbstractBenchRunner2 d3Runner = new AbstractBenchRunner2() {
+        final AbstractBenchRunnerVariableThreadCount d3Runner = new AbstractBenchRunnerVariableThreadCount() {
             @Override
             DTLZ getProblem() {
-                return new RetardedDTLZ1(getDim());
+                return new DTLZ1Plus1Ms(getDim());
             }
 
             @Override
@@ -19,11 +19,16 @@ public class ConcurrentConfigurationSearcher {
             int getNumberOfEvaluations() {
                 return 300000;
             }
+
+            @Override
+            protected int getPopSize() {
+                return 250;
+            }
         };
 
         System.out.println("dim3 ll");
         long prevDuration = Integer.MAX_VALUE;
-        for (int i = 66; i < 0; ++i) {
+        for (int i = 1; i < 301; ++i) {
             System.out.println(i);
             final long start = System.currentTimeMillis();
             d3Runner.levelLockJfby(i);
@@ -35,7 +40,7 @@ public class ConcurrentConfigurationSearcher {
 
         System.out.println("dim3 cj");
         prevDuration = Integer.MAX_VALUE;
-        for (int i = 16; i < 301; ++i) {
+        for (int i = 1; i < 301; ++i) {
             System.out.println(i);
             final long start = System.currentTimeMillis();
             d3Runner.cjfbyAlt(i);
@@ -57,10 +62,70 @@ public class ConcurrentConfigurationSearcher {
             prevDuration = duration;
         }
 
-        final AbstractBenchRunner2 d4Runner = new AbstractBenchRunner2() {
+        final AbstractBenchRunnerVariableThreadCount d3RunnerPop1000 = new AbstractBenchRunnerVariableThreadCount() {
             @Override
             DTLZ getProblem() {
-                return new RetardedDTLZ1(getDim());
+                return new DTLZ1Plus1Ms(getDim());
+            }
+
+            @Override
+            int getDim() {
+                return 3;
+            }
+
+            @Override
+            int getNumberOfEvaluations() {
+                return 300000;
+            }
+
+            @Override
+            protected int getPopSize() {
+                return 1000;
+            }
+        };
+
+        System.out.println("dim3 ll1000");
+        prevDuration = Integer.MAX_VALUE;
+
+        for (int i = 1; i < 301; ++i) {
+            System.out.println(i);
+            final long start = System.currentTimeMillis();
+            d3RunnerPop1000.levelLockJfby(i);
+            final long duration = System.currentTimeMillis() - start;
+            if (duration > prevDuration * 2)
+                break;
+            prevDuration = duration;
+        }
+
+        System.out.println("dim3 cj1000");
+        prevDuration = Integer.MAX_VALUE;
+        for (int i = 1; i < 301; ++i) {
+            System.out.println(i);
+            final long start = System.currentTimeMillis();
+            d3RunnerPop1000.cjfbyAlt(i);
+            final long duration = System.currentTimeMillis() - start;
+            if (duration > prevDuration * 2)
+                break;
+            prevDuration = duration;
+        }
+
+        System.out.println("dim3 ts1000");
+        prevDuration = Integer.MAX_VALUE;
+        for (int i = 1; i < 301; ++i) {
+            System.out.println(i);
+            final long start = System.currentTimeMillis();
+            d3RunnerPop1000.ts(i);
+            final long duration = System.currentTimeMillis() - start;
+            if (duration > prevDuration * 2)
+                break;
+            prevDuration = duration;
+        }
+
+
+        final AbstractBenchRunnerVariableThreadCount d4Runner = new AbstractBenchRunnerVariableThreadCount() {
+            @Override
+            DTLZ getProblem() {
+                return new DTLZ1Plus1Ms(getDim());
             }
 
             @Override
@@ -110,10 +175,10 @@ public class ConcurrentConfigurationSearcher {
             prevDuration = duration;
         }
 
-        final AbstractBenchRunner2 d5Runner = new AbstractBenchRunner2() {
+        final AbstractBenchRunnerVariableThreadCount d5Runner = new AbstractBenchRunnerVariableThreadCount() {
             @Override
             DTLZ getProblem() {
-                return new RetardedDTLZ1(getDim());
+                return new DTLZ1Plus1Ms(getDim());
             }
 
             @Override
